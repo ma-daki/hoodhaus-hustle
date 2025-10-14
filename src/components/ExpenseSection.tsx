@@ -33,8 +33,8 @@ const ExpenseSection = ({
           <Input
             id="bale-cost"
             type="number"
-            value={baleCost}
-            onChange={(e) => onBaleCostChange(Number(e.target.value))}
+            value={baleCost || ""}
+            onChange={(e) => onBaleCostChange(Number(e.target.value) || 0)}
             className="mt-1"
             min="0"
           />
@@ -44,8 +44,8 @@ const ExpenseSection = ({
           <Input
             id="weighbill-cost"
             type="number"
-            value={weighbillCost}
-            onChange={(e) => onWeighbillCostChange(Number(e.target.value))}
+            value={weighbillCost || ""}
+            onChange={(e) => onWeighbillCostChange(Number(e.target.value) || 0)}
             className="mt-1"
             min="0"
           />
@@ -55,8 +55,8 @@ const ExpenseSection = ({
           <Input
             id="logistics-cost"
             type="number"
-            value={logisticsCost}
-            onChange={(e) => onLogisticsCostChange(Number(e.target.value))}
+            value={logisticsCost || ""}
+            onChange={(e) => onLogisticsCostChange(Number(e.target.value) || 0)}
             className="mt-1"
             min="0"
           />

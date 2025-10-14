@@ -37,8 +37,8 @@ const InventorySection = ({
             <Input
               id="hoodies-stock"
               type="number"
-              value={hoodiesStock}
-              onChange={(e) => onHoodiesStockChange(Number(e.target.value))}
+              value={hoodiesStock || ""}
+              onChange={(e) => onHoodiesStockChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
             />
@@ -48,8 +48,8 @@ const InventorySection = ({
             <Input
               id="hoodies-sold"
               type="number"
-              value={hoodiesSold}
-              onChange={(e) => onHoodiesSoldChange(Number(e.target.value))}
+              value={hoodiesSold || ""}
+              onChange={(e) => onHoodiesSoldChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
             />
@@ -67,8 +67,8 @@ const InventorySection = ({
             <Input
               id="sweatshirts-stock"
               type="number"
-              value={sweatshirtsStock}
-              onChange={(e) => onSweatshirtsStockChange(Number(e.target.value))}
+              value={sweatshirtsStock || ""}
+              onChange={(e) => onSweatshirtsStockChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
             />
@@ -78,8 +78,8 @@ const InventorySection = ({
             <Input
               id="sweatshirts-sold"
               type="number"
-              value={sweatshirtsSold}
-              onChange={(e) => onSweatshirtsSoldChange(Number(e.target.value))}
+              value={sweatshirtsSold || ""}
+              onChange={(e) => onSweatshirtsSoldChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
             />

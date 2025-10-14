@@ -35,8 +35,8 @@ const SalesSection = ({
           <Input
             id="hoodie-price"
             type="number"
-            value={hoodiePrice}
-            onChange={(e) => onHoodiePriceChange(Number(e.target.value))}
+            value={hoodiePrice || ""}
+            onChange={(e) => onHoodiePriceChange(Number(e.target.value) || 0)}
             className="mt-1"
             min="0"
           />
@@ -49,8 +49,8 @@ const SalesSection = ({
           <Input
             id="sweatshirt-price"
             type="number"
-            value={sweatshirtPrice}
-            onChange={(e) => onSweatshirtPriceChange(Number(e.target.value))}
+            value={sweatshirtPrice || ""}
+            onChange={(e) => onSweatshirtPriceChange(Number(e.target.value) || 0)}
             className="mt-1"
             min="0"
           />
