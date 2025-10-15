@@ -10,7 +10,10 @@ import ExpenseSection from "@/components/ExpenseSection";
 import SalesSection from "@/components/SalesSection";
 import GoalsSection from "@/components/GoalsSection";
 import PerformanceChart from "@/components/PerformanceChart";
+import HistoricalReports from "@/components/HistoricalReports";
 import { generatePDF } from "@/utils/pdfGenerator";
+import { WeeklyStorage, WeeklyData } from "@/types/weeklyData";
+import { format } from "date-fns";
 import clothingBg from "@/assets/clothing-bg.jpg";
 
 const STORAGE_KEY = "hoodhaus-weekly-data";
@@ -18,6 +21,13 @@ const STORAGE_KEY = "hoodhaus-weekly-data";
 const Index = () => {
   useThemeDetection();
   const { toast } = useToast();
+
+  // Multi-week storage
+  const [storage, setStorage] = useState<WeeklyStorage>({
+    currentWeekId: null,
+    weeks: {}
+  });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Week Selection
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -43,47 +53,58 @@ const Index = () => {
   const [goalStatus, setGoalStatus] = useState("");
   const [weeklyRemark, setWeeklyRemark] = useState("");
 
-  // Load data from localStorage on mount
+  // Load storage from localStorage on mount
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
-      const data = JSON.parse(savedData);
-      setStartDate(data.startDate ? new Date(data.startDate) : null);
-      setEndDate(data.endDate ? new Date(data.endDate) : null);
-      setHoodiesStock(data.hoodiesStock || 0);
-      setSweatshirtsStock(data.sweatshirtsStock || 0);
-      setHoodiesSold(data.hoodiesSold || 0);
-      setSweatshirtsSold(data.sweatshirtsSold || 0);
-      setHoodiePrice(data.hoodiePrice || 0);
-      setSweatshirtPrice(data.sweatshirtPrice || 0);
-      setBaleCost(data.baleCost || 0);
-      setWeighbillCost(data.weighbillCost || 0);
-      setLogisticsCost(data.logisticsCost || 0);
-      setWeeklyGoal(data.weeklyGoal || "");
-      setGoalStatus(data.goalStatus || "");
-      setWeeklyRemark(data.weeklyRemark || "");
+      try {
+        const parsed = JSON.parse(savedData);
+        // Check if it's the new multi-week format
+        if (parsed.weeks && typeof parsed.weeks === 'object') {
+          setStorage(parsed);
+          // Load the current week if exists
+          if (parsed.currentWeekId && parsed.weeks[parsed.currentWeekId]) {
+            loadWeekData(parsed.weeks[parsed.currentWeekId]);
+          }
+        } else {
+          // Migrate old single-week format to new format
+          const weekId = parsed.startDate ? format(new Date(parsed.startDate), 'yyyy-MM-dd') : null;
+          const migratedStorage: WeeklyStorage = {
+            currentWeekId: weekId,
+            weeks: weekId ? {
+              [weekId]: {
+                startDate: parsed.startDate || "",
+                endDate: parsed.endDate || "",
+                hoodiesStock: parsed.hoodiesStock || 0,
+                sweatshirtsStock: parsed.sweatshirtsStock || 0,
+                hoodiesSold: parsed.hoodiesSold || 0,
+                sweatshirtsSold: parsed.sweatshirtsSold || 0,
+                hoodiePrice: parsed.hoodiePrice || 0,
+                sweatshirtPrice: parsed.sweatshirtPrice || 0,
+                baleCost: parsed.baleCost || 0,
+                weighbillCost: parsed.weighbillCost || 0,
+                logisticsCost: parsed.logisticsCost || 0,
+                weeklyGoal: parsed.weeklyGoal || "",
+                goalStatus: parsed.goalStatus || "",
+                weeklyRemark: parsed.weeklyRemark || "",
+              }
+            } : {}
+          };
+          setStorage(migratedStorage);
+          if (weekId && migratedStorage.weeks[weekId]) {
+            loadWeekData(migratedStorage.weeks[weekId]);
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedStorage));
+        }
+      } catch (error) {
+        console.error("Error loading saved data:", error);
+      }
     }
   }, []);
 
-  // Save data to localStorage whenever it changes
+  // Mark as changed when any field updates
   useEffect(() => {
-    const dataToSave = {
-      startDate: startDate?.toISOString(),
-      endDate: endDate?.toISOString(),
-      hoodiesStock,
-      sweatshirtsStock,
-      hoodiesSold,
-      sweatshirtsSold,
-      hoodiePrice,
-      sweatshirtPrice,
-      baleCost,
-      weighbillCost,
-      logisticsCost,
-      weeklyGoal,
-      goalStatus,
-      weeklyRemark,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    setHasUnsavedChanges(true);
   }, [
     startDate,
     endDate,
@@ -100,6 +121,108 @@ const Index = () => {
     goalStatus,
     weeklyRemark,
   ]);
+
+  const loadWeekData = (data: WeeklyData) => {
+    setStartDate(data.startDate ? new Date(data.startDate) : null);
+    setEndDate(data.endDate ? new Date(data.endDate) : null);
+    setHoodiesStock(data.hoodiesStock || 0);
+    setSweatshirtsStock(data.sweatshirtsStock || 0);
+    setHoodiesSold(data.hoodiesSold || 0);
+    setSweatshirtsSold(data.sweatshirtsSold || 0);
+    setHoodiePrice(data.hoodiePrice || 0);
+    setSweatshirtPrice(data.sweatshirtPrice || 0);
+    setBaleCost(data.baleCost || 0);
+    setWeighbillCost(data.weighbillCost || 0);
+    setLogisticsCost(data.logisticsCost || 0);
+    setWeeklyGoal(data.weeklyGoal || "");
+    setGoalStatus(data.goalStatus || "");
+    setWeeklyRemark(data.weeklyRemark || "");
+    setHasUnsavedChanges(false);
+  };
+
+  const saveCurrentWeek = () => {
+    if (!startDate || !endDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please select start and end dates before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const weekId = format(startDate, 'yyyy-MM-dd');
+    const weekData: WeeklyData = {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      hoodiesStock,
+      sweatshirtsStock,
+      hoodiesSold,
+      sweatshirtsSold,
+      hoodiePrice,
+      sweatshirtPrice,
+      baleCost,
+      weighbillCost,
+      logisticsCost,
+      weeklyGoal,
+      goalStatus,
+      weeklyRemark,
+    };
+
+    const newStorage: WeeklyStorage = {
+      currentWeekId: weekId,
+      weeks: {
+        ...storage.weeks,
+        [weekId]: weekData
+      }
+    };
+
+    setStorage(newStorage);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newStorage));
+    setHasUnsavedChanges(false);
+
+    toast({
+      title: "Week Saved!",
+      description: `Report for ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')} has been saved.`,
+    });
+  };
+
+  const handleSelectWeek = (weekId: string) => {
+    if (hasUnsavedChanges) {
+      const confirm = window.confirm("You have unsaved changes. Do you want to discard them?");
+      if (!confirm) return;
+    }
+
+    const weekData = storage.weeks[weekId];
+    if (weekData) {
+      loadWeekData(weekData);
+      setStorage({ ...storage, currentWeekId: weekId });
+    }
+  };
+
+  const handleCreateNewWeek = () => {
+    if (hasUnsavedChanges) {
+      const confirm = window.confirm("You have unsaved changes. Do you want to discard them?");
+      if (!confirm) return;
+    }
+
+    // Reset all fields for new week
+    setStartDate(null);
+    setEndDate(null);
+    setHoodiesStock(0);
+    setSweatshirtsStock(0);
+    setHoodiesSold(0);
+    setSweatshirtsSold(0);
+    setHoodiePrice(0);
+    setSweatshirtPrice(0);
+    setBaleCost(0);
+    setWeighbillCost(0);
+    setLogisticsCost(0);
+    setWeeklyGoal("");
+    setGoalStatus("");
+    setWeeklyRemark("");
+    setStorage({ ...storage, currentWeekId: null });
+    setHasUnsavedChanges(false);
+  };
 
   // Calculations
   const totalRevenue = hoodiePrice * hoodiesSold + sweatshirtPrice * sweatshirtsSold;
@@ -193,12 +316,22 @@ const Index = () => {
           </div>
         </header>
 
+        {/* Historical Reports */}
+        <HistoricalReports
+          weeks={storage.weeks}
+          currentWeekId={storage.currentWeekId}
+          onSelectWeek={handleSelectWeek}
+          onCreateNewWeek={handleCreateNewWeek}
+        />
+
         {/* Week Selection */}
         <WeekSelector
           startDate={startDate}
           endDate={endDate}
           onStartDateChange={setStartDate}
           onEndDateChange={setEndDate}
+          onSaveWeek={saveCurrentWeek}
+          hasUnsavedChanges={hasUnsavedChanges}
         />
 
         {/* Metrics Overview */}
