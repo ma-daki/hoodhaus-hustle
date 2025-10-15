@@ -136,11 +136,18 @@ All colors MUST be HSL.
 /* React DatePicker Custom Styles */
 .react-datepicker-wrapper {
   width: 100%;
+  position: relative;
+  z-index: 50;
+}
+
+.react-datepicker-popper {
+  z-index: 9999 !important;
 }
 
 .react-datepicker {
   @apply bg-card border border-border rounded-lg shadow-lg;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  z-index: 9999 !important;
 }
 
 .react-datepicker__header {

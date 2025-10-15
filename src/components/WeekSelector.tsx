@@ -50,7 +50,7 @@ const WeekSelector = ({
         )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+        <div className="relative z-50">
           <label className="block text-sm font-medium mb-2">Start Date (Sunday)</label>
           <DatePicker
             selected={startDate}
@@ -59,10 +59,12 @@ const WeekSelector = ({
             dateFormat="dd/MM/yyyy"
             placeholderText="Select start date"
             filterDate={(date) => date.getDay() === 0}
+            popperClassName="z-[9999]"
+            popperPlacement="bottom-start"
           />
           <p className="text-xs text-muted-foreground mt-1">Week starts on Sunday</p>
         </div>
-        <div>
+        <div className="relative">
           <label className="block text-sm font-medium mb-2">End Date (Auto-calculated)</label>
           <DatePicker
             selected={endDate}
