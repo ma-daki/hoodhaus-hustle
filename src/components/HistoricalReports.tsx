@@ -1,18 +1,33 @@
-import { History, TrendingUp, Calendar, Download } from "lucide-react";
+import { History, TrendingUp, Calendar, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { WeeklyData } from "@/types/weeklyData";
 import { format } from "date-fns";
 import { generatePDF } from "@/utils/pdfGenerator";
+import { useState } from "react";
 
 interface HistoricalReportsProps {
   weeks: Record<string, WeeklyData>;
   currentWeekId: string | null;
   onSelectWeek: (weekId: string) => void;
   onCreateNewWeek: () => void;
+  onDeleteWeek: (weekId: string) => void;
 }
 
-const HistoricalReports = ({ weeks, currentWeekId, onSelectWeek, onCreateNewWeek }: HistoricalReportsProps) => {
+const HistoricalReports = ({ weeks, currentWeekId, onSelectWeek, onCreateNewWeek, onDeleteWeek }: HistoricalReportsProps) => {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [weekToDelete, setWeekToDelete] = useState<{ id: string; data: WeeklyData } | null>(null);
+
   const weekEntries = Object.entries(weeks).sort((a, b) => 
     new Date(b[1].startDate).getTime() - new Date(a[1].startDate).getTime()
   );
@@ -32,6 +47,20 @@ const HistoricalReports = ({ weeks, currentWeekId, onSelectWeek, onCreateNewWeek
       endDate: new Date(data.endDate),
     };
     generatePDF(weeklyData);
+  };
+
+  const handleDeleteClick = (weekId: string, data: WeeklyData, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setWeekToDelete({ id: weekId, data });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (weekToDelete) {
+      onDeleteWeek(weekToDelete.id);
+      setDeleteDialogOpen(false);
+      setWeekToDelete(null);
+    }
   };
 
   return (
@@ -97,20 +126,54 @@ const HistoricalReports = ({ weeks, currentWeekId, onSelectWeek, onCreateNewWeek
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-4"
-                  onClick={(e) => handleDownloadReport(weekId, data, e)}
-                >
-                  <Download className="w-3 h-3 mr-2" />
-                  Download PDF
-                </Button>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={(e) => handleDownloadReport(weekId, data, e)}
+                  >
+                    <Download className="w-3 h-3 mr-2" />
+                    Download PDF
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={(e) => handleDeleteClick(weekId, data, e)}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
               </Card>
             );
           })}
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Weekly Report?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {weekToDelete && (
+                <>
+                  Are you sure you want to delete the report for{" "}
+                  <strong>
+                    {format(new Date(weekToDelete.data.startDate), 'MMM d')} - {format(new Date(weekToDelete.data.endDate), 'MMM d, yyyy')}
+                  </strong>
+                  ? This action cannot be undone and will permanently remove this weekly report from your records.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

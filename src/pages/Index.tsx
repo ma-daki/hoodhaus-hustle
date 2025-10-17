@@ -224,6 +224,28 @@ const Index = () => {
     setHasUnsavedChanges(false);
   };
 
+  const handleDeleteWeek = (weekId: string) => {
+    const { [weekId]: deletedWeek, ...remainingWeeks } = storage.weeks;
+    
+    const newStorage: WeeklyStorage = {
+      currentWeekId: storage.currentWeekId === weekId ? null : storage.currentWeekId,
+      weeks: remainingWeeks
+    };
+
+    setStorage(newStorage);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newStorage));
+
+    // If we deleted the current week, reset the form
+    if (storage.currentWeekId === weekId) {
+      handleCreateNewWeek();
+    }
+
+    toast({
+      title: "Week Deleted",
+      description: "The weekly report has been permanently removed.",
+    });
+  };
+
   // Calculations
   const totalRevenue = hoodiePrice * hoodiesSold + sweatshirtPrice * sweatshirtsSold;
   const totalExpenses = baleCost + weighbillCost + logisticsCost;
@@ -322,6 +344,7 @@ const Index = () => {
           currentWeekId={storage.currentWeekId}
           onSelectWeek={handleSelectWeek}
           onCreateNewWeek={handleCreateNewWeek}
+          onDeleteWeek={handleDeleteWeek}
         />
 
         {/* Week Selection */}
