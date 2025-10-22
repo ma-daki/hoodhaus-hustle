@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { Download, TrendingUp, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Download, TrendingUp, Sparkles, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useThemeDetection } from "@/hooks/useThemeDetection";
+import { useAuth } from "@/hooks/useAuth";
+import { useCloudSync } from "@/hooks/useCloudSync";
 import WeekSelector from "@/components/WeekSelector";
 import MetricsOverview from "@/components/MetricsOverview";
 import InventorySection from "@/components/InventorySection";
@@ -21,6 +24,15 @@ const STORAGE_KEY = "hoodhaus-weekly-data";
 const Index = () => {
   useThemeDetection();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, signOut } = useAuth();
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [authLoading, user, navigate]);
 
   // Multi-week storage
   const [storage, setStorage] = useState<WeeklyStorage>({
@@ -140,7 +152,15 @@ const Index = () => {
     setHasUnsavedChanges(false);
   };
 
-  const saveCurrentWeek = () => {
+  // Cloud sync
+  const { saveToCloud, deleteFromCloud } = useCloudSync(
+    user?.id || null,
+    storage,
+    setStorage,
+    loadWeekData
+  );
+
+  const saveCurrentWeek = async () => {
     if (!startDate || !endDate) {
       toast({
         title: "Missing Information",
@@ -178,12 +198,19 @@ const Index = () => {
 
     setStorage(newStorage);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newStorage));
-    setHasUnsavedChanges(false);
+    
+    // Save to cloud
+    try {
+      await saveToCloud(weekData, weekId);
+      setHasUnsavedChanges(false);
 
-    toast({
-      title: "Week Saved!",
-      description: `Report for ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')} has been saved.`,
-    });
+      toast({
+        title: "Week Saved!",
+        description: `Report for ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')} has been synced to cloud.`,
+      });
+    } catch (error) {
+      // Error already shown by saveToCloud
+    }
   };
 
   const handleSelectWeek = (weekId: string) => {
@@ -224,7 +251,7 @@ const Index = () => {
     setHasUnsavedChanges(false);
   };
 
-  const handleDeleteWeek = (weekId: string) => {
+  const handleDeleteWeek = async (weekId: string) => {
     const { [weekId]: deletedWeek, ...remainingWeeks } = storage.weeks;
     
     const newStorage: WeeklyStorage = {
@@ -235,15 +262,22 @@ const Index = () => {
     setStorage(newStorage);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newStorage));
 
-    // If we deleted the current week, reset the form
-    if (storage.currentWeekId === weekId) {
-      handleCreateNewWeek();
-    }
+    // Delete from cloud
+    try {
+      await deleteFromCloud(weekId);
+      
+      // If we deleted the current week, reset the form
+      if (storage.currentWeekId === weekId) {
+        handleCreateNewWeek();
+      }
 
-    toast({
-      title: "Week Deleted",
-      description: "The weekly report has been permanently removed.",
-    });
+      toast({
+        title: "Week Deleted",
+        description: "The weekly report has been permanently removed from cloud.",
+      });
+    } catch (error) {
+      // Error already shown by deleteFromCloud
+    }
   };
 
   // Calculations
@@ -296,6 +330,28 @@ const Index = () => {
 
   const rating = getPerformanceRating();
 
+  const handleSignOut = () => {
+    signOut();
+    navigate("/auth");
+  };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
@@ -319,21 +375,33 @@ const Index = () => {
               <h1 className="text-4xl md:text-5xl font-bold mb-2 text-gradient">
                 HoodHaus
               </h1>
-              <p className="text-muted-foreground">Weekly Performance Tracker</p>
+              <p className="text-muted-foreground">
+                Weekly Performance Tracker • {user.username}
+              </p>
             </div>
             <div className="flex flex-col items-start md:items-end gap-2">
               <div className={`flex items-center gap-2 ${rating.color} font-semibold`}>
                 <Sparkles className="w-5 h-5" />
                 {rating.text}
               </div>
-              <Button 
-                onClick={handleGeneratePDF} 
-                className="gradient-primary"
-                size="lg"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Report
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleGeneratePDF} 
+                  className="gradient-primary"
+                  size="lg"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Report
+                </Button>
+                <Button 
+                  onClick={handleSignOut} 
+                  variant="outline"
+                  size="lg"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
             </div>
           </div>
         </header>

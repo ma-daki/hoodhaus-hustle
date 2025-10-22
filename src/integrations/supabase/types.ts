@@ -14,7 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_users: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      weekly_reports: {
+        Row: {
+          bale_cost: number
+          created_at: string
+          end_date: string
+          goal_status: string | null
+          hoodie_price: number
+          hoodies_sold: number
+          hoodies_stock: number
+          id: string
+          logistics_cost: number
+          start_date: string
+          sweatshirt_price: number
+          sweatshirts_sold: number
+          sweatshirts_stock: number
+          updated_at: string
+          user_id: string
+          week_id: string
+          weekly_goal: string | null
+          weekly_remark: string | null
+          weighbill_cost: number
+        }
+        Insert: {
+          bale_cost?: number
+          created_at?: string
+          end_date: string
+          goal_status?: string | null
+          hoodie_price?: number
+          hoodies_sold?: number
+          hoodies_stock?: number
+          id?: string
+          logistics_cost?: number
+          start_date: string
+          sweatshirt_price?: number
+          sweatshirts_sold?: number
+          sweatshirts_stock?: number
+          updated_at?: string
+          user_id: string
+          week_id: string
+          weekly_goal?: string | null
+          weekly_remark?: string | null
+          weighbill_cost?: number
+        }
+        Update: {
+          bale_cost?: number
+          created_at?: string
+          end_date?: string
+          goal_status?: string | null
+          hoodie_price?: number
+          hoodies_sold?: number
+          hoodies_stock?: number
+          id?: string
+          logistics_cost?: number
+          start_date?: string
+          sweatshirt_price?: number
+          sweatshirts_sold?: number
+          sweatshirts_stock?: number
+          updated_at?: string
+          user_id?: string
+          week_id?: string
+          weekly_goal?: string | null
+          weekly_remark?: string | null
+          weighbill_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
