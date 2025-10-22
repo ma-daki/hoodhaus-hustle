@@ -1,4 +1,4 @@
-import { History, TrendingUp, Calendar, Download, Trash2 } from "lucide-react";
+import { History, TrendingUp, Calendar, Download, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -130,11 +130,21 @@ const HistoricalReports = ({ weeks, currentWeekId, onSelectWeek, onCreateNewWeek
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectWeek(weekId);
+                    }}
+                  >
+                    <Edit className="w-3 h-3 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => handleDownloadReport(weekId, data, e)}
                   >
                     <Download className="w-3 h-3 mr-2" />
-                    Download PDF
+                    PDF
                   </Button>
                   <Button
                     variant="destructive"

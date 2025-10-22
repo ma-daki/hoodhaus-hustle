@@ -11,6 +11,7 @@ interface WeekSelectorProps {
   onEndDateChange: (date: Date | null) => void;
   onSaveWeek: () => void;
   hasUnsavedChanges: boolean;
+  isEditingWeek?: boolean;
 }
 
 const WeekSelector = ({ 
@@ -19,7 +20,8 @@ const WeekSelector = ({
   onStartDateChange, 
   onEndDateChange,
   onSaveWeek,
-  hasUnsavedChanges
+  hasUnsavedChanges,
+  isEditingWeek = false
 }: WeekSelectorProps) => {
   const handleStartDateChange = (date: Date | null) => {
     if (date) {
@@ -38,14 +40,21 @@ const WeekSelector = ({
   return (
     <div className="glass-card rounded-lg p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary" />
-          Week Selection
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            Week Selection
+          </h2>
+          {isEditingWeek && (
+            <span className="text-xs bg-accent text-accent-foreground px-3 py-1 rounded-full font-medium">
+              Editing Mode
+            </span>
+          )}
+        </div>
         {hasUnsavedChanges && (
           <Button onClick={onSaveWeek} className="gradient-primary">
             <Save className="w-4 h-4 mr-2" />
-            Save Week
+            {isEditingWeek ? 'Update Week' : 'Save Week'}
           </Button>
         )}
       </div>

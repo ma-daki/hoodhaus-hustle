@@ -355,6 +355,7 @@ const Index = () => {
           onEndDateChange={setEndDate}
           onSaveWeek={saveCurrentWeek}
           hasUnsavedChanges={hasUnsavedChanges}
+          isEditingWeek={storage.currentWeekId !== null && startDate !== null}
         />
 
         {/* Metrics Overview */}
