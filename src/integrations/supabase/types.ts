@@ -35,6 +35,42 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          cost_price: number
+          created_at: string
+          customer_name: string
+          id: string
+          product_type: string
+          selling_price: number
+          updated_at: string
+          user_id: string
+          week_id: string
+        }
+        Insert: {
+          cost_price?: number
+          created_at?: string
+          customer_name: string
+          id?: string
+          product_type: string
+          selling_price?: number
+          updated_at?: string
+          user_id: string
+          week_id: string
+        }
+        Update: {
+          cost_price?: number
+          created_at?: string
+          customer_name?: string
+          id?: string
+          product_type?: string
+          selling_price?: number
+          updated_at?: string
+          user_id?: string
+          week_id?: string
+        }
+        Relationships: []
+      }
       weekly_reports: {
         Row: {
           bale_cost: number
