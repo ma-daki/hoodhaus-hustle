@@ -49,10 +49,12 @@ const InventorySection = ({
               id="hoodies-sold"
               type="number"
               value={hoodiesSold || ""}
-              onChange={(e) => onHoodiesSoldChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
+              disabled
+              title="Calculated from transactions"
             />
+            <p className="text-xs text-muted-foreground mt-1">Auto-calculated from sales</p>
           </div>
           <div className="p-4 rounded-lg bg-secondary">
             <p className="text-sm text-muted-foreground">Remaining Stock</p>
@@ -79,10 +81,12 @@ const InventorySection = ({
               id="sweatshirts-sold"
               type="number"
               value={sweatshirtsSold || ""}
-              onChange={(e) => onSweatshirtsSoldChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
+              disabled
+              title="Calculated from transactions"
             />
+            <p className="text-xs text-muted-foreground mt-1">Auto-calculated from sales</p>
           </div>
           <div className="p-4 rounded-lg bg-secondary">
             <p className="text-sm text-muted-foreground">Remaining Stock</p>

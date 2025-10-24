@@ -10,7 +10,8 @@ import WeekSelector from "@/components/WeekSelector";
 import MetricsOverview from "@/components/MetricsOverview";
 import InventorySection from "@/components/InventorySection";
 import ExpenseSection from "@/components/ExpenseSection";
-import SalesSection from "@/components/SalesSection";
+import TransactionsSection from "@/components/TransactionsSection";
+import { TransactionSummary } from "@/types/transaction";
 import GoalsSection from "@/components/GoalsSection";
 import PerformanceChart from "@/components/PerformanceChart";
 import HistoricalReports from "@/components/HistoricalReports";
@@ -48,12 +49,15 @@ const Index = () => {
   // Inventory
   const [hoodiesStock, setHoodiesStock] = useState(0);
   const [sweatshirtsStock, setSweatshirtsStock] = useState(0);
-  const [hoodiesSold, setHoodiesSold] = useState(0);
-  const [sweatshirtsSold, setSweatshirtsSold] = useState(0);
 
-  // Pricing
-  const [hoodiePrice, setHoodiePrice] = useState(0);
-  const [sweatshirtPrice, setSweatshirtPrice] = useState(0);
+  // Transaction summary (derived from TransactionsSection)
+  const [transactionSummary, setTransactionSummary] = useState<TransactionSummary>({
+    totalRevenue: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    hoodiesSold: 0,
+    sweatshirtsSold: 0,
+  });
 
   // Expenses
   const [baleCost, setBaleCost] = useState(0);
@@ -122,10 +126,6 @@ const Index = () => {
     endDate,
     hoodiesStock,
     sweatshirtsStock,
-    hoodiesSold,
-    sweatshirtsSold,
-    hoodiePrice,
-    sweatshirtPrice,
     baleCost,
     weighbillCost,
     logisticsCost,
@@ -139,10 +139,6 @@ const Index = () => {
     setEndDate(data.endDate ? new Date(data.endDate) : null);
     setHoodiesStock(data.hoodiesStock || 0);
     setSweatshirtsStock(data.sweatshirtsStock || 0);
-    setHoodiesSold(data.hoodiesSold || 0);
-    setSweatshirtsSold(data.sweatshirtsSold || 0);
-    setHoodiePrice(data.hoodiePrice || 0);
-    setSweatshirtPrice(data.sweatshirtPrice || 0);
     setBaleCost(data.baleCost || 0);
     setWeighbillCost(data.weighbillCost || 0);
     setLogisticsCost(data.logisticsCost || 0);
@@ -176,10 +172,10 @@ const Index = () => {
       endDate: endDate.toISOString(),
       hoodiesStock,
       sweatshirtsStock,
-      hoodiesSold,
-      sweatshirtsSold,
-      hoodiePrice,
-      sweatshirtPrice,
+      hoodiesSold: transactionSummary.hoodiesSold,
+      sweatshirtsSold: transactionSummary.sweatshirtsSold,
+      hoodiePrice: 0, // Deprecated - now calculated from transactions
+      sweatshirtPrice: 0, // Deprecated - now calculated from transactions
       baleCost,
       weighbillCost,
       logisticsCost,
@@ -237,10 +233,6 @@ const Index = () => {
     setEndDate(null);
     setHoodiesStock(0);
     setSweatshirtsStock(0);
-    setHoodiesSold(0);
-    setSweatshirtsSold(0);
-    setHoodiePrice(0);
-    setSweatshirtPrice(0);
     setBaleCost(0);
     setWeighbillCost(0);
     setLogisticsCost(0);
@@ -281,7 +273,7 @@ const Index = () => {
   };
 
   // Calculations
-  const totalRevenue = hoodiePrice * hoodiesSold + sweatshirtPrice * sweatshirtsSold;
+  const totalRevenue = transactionSummary.totalRevenue;
   const totalExpenses = baleCost + weighbillCost + logisticsCost;
   const netProfit = totalRevenue - totalExpenses;
   const totalStock = hoodiesStock + sweatshirtsStock;
@@ -301,10 +293,10 @@ const Index = () => {
       endDate,
       hoodiesStock,
       sweatshirtsStock,
-      hoodiesSold,
-      sweatshirtsSold,
-      hoodiePrice,
-      sweatshirtPrice,
+      hoodiesSold: transactionSummary.hoodiesSold,
+      sweatshirtsSold: transactionSummary.sweatshirtsSold,
+      hoodiePrice: 0,
+      sweatshirtPrice: 0,
       baleCost,
       weighbillCost,
       logisticsCost,
@@ -438,12 +430,12 @@ const Index = () => {
         <InventorySection
           hoodiesStock={hoodiesStock}
           sweatshirtsStock={sweatshirtsStock}
-          hoodiesSold={hoodiesSold}
-          sweatshirtsSold={sweatshirtsSold}
+          hoodiesSold={transactionSummary.hoodiesSold}
+          sweatshirtsSold={transactionSummary.sweatshirtsSold}
           onHoodiesStockChange={setHoodiesStock}
           onSweatshirtsStockChange={setSweatshirtsStock}
-          onHoodiesSoldChange={setHoodiesSold}
-          onSweatshirtsSoldChange={setSweatshirtsSold}
+          onHoodiesSoldChange={() => {}} // Read-only, derived from transactions
+          onSweatshirtsSoldChange={() => {}} // Read-only, derived from transactions
         />
 
         {/* Expenses */}
@@ -456,14 +448,11 @@ const Index = () => {
           onLogisticsCostChange={setLogisticsCost}
         />
 
-        {/* Sales */}
-        <SalesSection
-          hoodiePrice={hoodiePrice}
-          sweatshirtPrice={sweatshirtPrice}
-          hoodiesSold={hoodiesSold}
-          sweatshirtsSold={sweatshirtsSold}
-          onHoodiePriceChange={setHoodiePrice}
-          onSweatshirtPriceChange={setSweatshirtPrice}
+        {/* Sales Transactions */}
+        <TransactionsSection
+          userId={user.id}
+          weekId={storage.currentWeekId}
+          onSummaryChange={setTransactionSummary}
         />
 
         {/* Goals */}
@@ -478,8 +467,8 @@ const Index = () => {
 
         {/* Performance Chart */}
         <PerformanceChart
-          hoodiesSold={hoodiesSold}
-          sweatshirtsSold={sweatshirtsSold}
+          hoodiesSold={transactionSummary.hoodiesSold}
+          sweatshirtsSold={transactionSummary.sweatshirtsSold}
           totalRevenue={totalRevenue}
           netProfit={netProfit}
         />
