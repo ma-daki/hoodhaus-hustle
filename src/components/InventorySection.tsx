@@ -23,6 +23,13 @@ const InventorySection = ({
   onHoodiesSoldChange,
   onSweatshirtsSoldChange
 }: InventorySectionProps) => {
+  // Lock stock inputs if stock has been entered and any items sold (but not fully sold)
+  const hoodiesRemaining = hoodiesStock - hoodiesSold;
+  const sweatshirtsRemaining = sweatshirtsStock - sweatshirtsSold;
+  
+  const hoodiesStockLocked = hoodiesStock > 0 && hoodiesSold > 0 && hoodiesRemaining > 0;
+  const sweatshirtsStockLocked = sweatshirtsStock > 0 && sweatshirtsSold > 0 && sweatshirtsRemaining > 0;
+  
   return (
     <div className="glass-card rounded-lg p-6 mb-6">
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -41,7 +48,15 @@ const InventorySection = ({
               onChange={(e) => onHoodiesStockChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
+              disabled={hoodiesStockLocked}
+              title={hoodiesStockLocked ? "Stock is locked until current batch is fully sold" : ""}
             />
+            {hoodiesStockLocked && (
+              <p className="text-xs text-amber-500 mt-1">🔒 Locked until batch sold out</p>
+            )}
+            {hoodiesRemaining === 0 && hoodiesStock > 0 && (
+              <p className="text-xs text-green-500 mt-1">✓ Batch complete - you can add new stock</p>
+            )}
           </div>
           <div>
             <Label htmlFor="hoodies-sold">Units Sold</Label>
@@ -73,7 +88,15 @@ const InventorySection = ({
               onChange={(e) => onSweatshirtsStockChange(Number(e.target.value) || 0)}
               className="mt-1"
               min="0"
+              disabled={sweatshirtsStockLocked}
+              title={sweatshirtsStockLocked ? "Stock is locked until current batch is fully sold" : ""}
             />
+            {sweatshirtsStockLocked && (
+              <p className="text-xs text-amber-500 mt-1">🔒 Locked until batch sold out</p>
+            )}
+            {sweatshirtsRemaining === 0 && sweatshirtsStock > 0 && (
+              <p className="text-xs text-green-500 mt-1">✓ Batch complete - you can add new stock</p>
+            )}
           </div>
           <div>
             <Label htmlFor="sweatshirts-sold">Units Sold</Label>

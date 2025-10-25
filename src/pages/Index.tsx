@@ -446,6 +446,10 @@ const Index = () => {
           onBaleCostChange={setBaleCost}
           onWeighbillCostChange={setWeighbillCost}
           onLogisticsCostChange={setLogisticsCost}
+          hoodiesStock={hoodiesStock}
+          sweatshirtsStock={sweatshirtsStock}
+          hoodiesSold={transactionSummary.hoodiesSold}
+          sweatshirtsSold={transactionSummary.sweatshirtsSold}
         />
 
         {/* Sales Transactions */}
