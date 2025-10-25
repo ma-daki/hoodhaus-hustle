@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 
 export interface AuthUser {
   id: string;
@@ -12,36 +10,20 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          username: session.user.email || "User"
-        });
-      }
-      setIsLoading(false);
-    });
+    // Check if user is logged in via localStorage
+    const username = localStorage.getItem("hoodhaus-username");
+    const userId = localStorage.getItem("hoodhaus-user-id");
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          username: session.user.email || "User"
-        });
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    if (username && userId) {
+      setUser({ id: userId, username });
+    }
+    
+    setIsLoading(false);
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signOut = () => {
+    localStorage.removeItem("hoodhaus-username");
+    localStorage.removeItem("hoodhaus-user-id");
     setUser(null);
   };
 
